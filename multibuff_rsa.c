@@ -545,6 +545,7 @@ int multibuff_rsa_priv_enc(int flen, const unsigned char *from,
     int sts = -1;
     ASYNC_JOB *job;
     int rsa_len = 0;
+    int job_ret = 0;
     rsa_priv_op_data *rsa_priv_req = NULL;
     int padding_result = 0;
     const BIGNUM *n = NULL;
@@ -679,7 +680,19 @@ int multibuff_rsa_priv_enc(int flen, const unsigned char *from,
         }
      }
 
-    qat_pause_job(job, 0);
+    DEBUG("- Waiting: %p - status = %d\n", rsa_priv_req, sts);
+    do {
+        /* If we get a failure on qat_pause_job then we will
+           not flag an error here and quit because we have
+           an asynchronous request in flight.
+           We don't want to start cleaning up data
+           structures that are still being used. If
+           qat_pause_job fails we will just yield and
+           loop around and try again until the request
+           completes and we can continue. */
+        if ((job_ret = qat_pause_job(job, ASYNC_STATUS_OK)) == 0)
+            pthread_yield();
+    } while (QAT_CHK_JOB_RESUMED_UNEXPECTEDLY(job_ret));
 
     DEBUG("- Finished: %p - status = %d\n", rsa_priv_req, sts);
 
@@ -704,6 +717,7 @@ int multibuff_rsa_priv_dec(int flen, const unsigned char *from,
     int sts = -1;
     ASYNC_JOB *job;
     int rsa_len = 0;
+    int job_ret = 0;
     rsa_priv_op_data *rsa_priv_req = NULL;
     const BIGNUM *n = NULL;
     const BIGNUM *e = NULL;
@@ -818,7 +832,20 @@ int multibuff_rsa_priv_dec(int flen, const unsigned char *from,
         }
     }
 
-    qat_pause_job(job, ASYNC_STATUS_OK);
+    DEBUG("- Waiting: %p - status = %d\n", rsa_priv_req, sts);
+    do {
+        /* If we get a failure on qat_pause_job then we will
+           not flag an error here and quit because we have
+           an asynchronous request in flight.
+           We don't want to start cleaning up data
+           structures that are still being used. If
+           qat_pause_job fails we will just yield and
+           loop around and try again until the request
+           completes and we can continue. */
+        if ((job_ret = qat_pause_job(job, ASYNC_STATUS_OK)) == 0)
+            pthread_yield();
+    } while (QAT_CHK_JOB_RESUMED_UNEXPECTEDLY(job_ret));
+
     DEBUG("- Finished: %p - status = %d\n", rsa_priv_req, sts);
 
     if (sts < 1 ) {
@@ -840,6 +867,7 @@ int multibuff_rsa_pub_enc(int flen, const unsigned char *from, unsigned char *to
     int sts = -1;
     ASYNC_JOB *job;
     int rsa_len = 0;
+    int job_ret = 0;
     rsa_pub_op_data *rsa_pub_req = NULL;
     int padding_result = 0;
     const BIGNUM *n = NULL;
@@ -941,7 +969,20 @@ int multibuff_rsa_pub_enc(int flen, const unsigned char *from, unsigned char *to
         }
     }
 
-    qat_pause_job(job, ASYNC_STATUS_OK);
+    DEBUG("- Waiting: %p - status = %d\n", rsa_pub_req, sts);
+    do {
+        /* If we get a failure on qat_pause_job then we will
+           not flag an error here and quit because we have
+           an asynchronous request in flight.
+           We don't want to start cleaning up data
+           structures that are still being used. If
+           qat_pause_job fails we will just yield and
+           loop around and try again until the request
+           completes and we can continue. */
+        if ((job_ret = qat_pause_job(job, ASYNC_STATUS_OK)) == 0)
+            pthread_yield();
+    } while (QAT_CHK_JOB_RESUMED_UNEXPECTEDLY(job_ret));
+
     DEBUG("- Finished: %p - status = %d\n", rsa_pub_req, sts);
 
     if (sts > 0) {
@@ -965,6 +1006,7 @@ int multibuff_rsa_pub_dec(int flen, const unsigned char *from, unsigned char *to
     int sts = -1;
     ASYNC_JOB *job;
     int rsa_len = 0;
+    int job_ret = 0;
     rsa_pub_op_data *rsa_pub_req = NULL;
     const BIGNUM *n = NULL;
     const BIGNUM *e = NULL;
@@ -1046,7 +1088,20 @@ int multibuff_rsa_pub_dec(int flen, const unsigned char *from, unsigned char *to
         }
     }
 
-    qat_pause_job(job, ASYNC_STATUS_OK);
+    DEBUG("- Waiting: %p - status = %d\n", rsa_pub_req, sts);
+    do {
+        /* If we get a failure on qat_pause_job then we will
+           not flag an error here and quit because we have
+           an asynchronous request in flight.
+           We don't want to start cleaning up data
+           structures that are still being used. If
+           qat_pause_job fails we will just yield and
+           loop around and try again until the request
+           completes and we can continue. */
+        if ((job_ret = qat_pause_job(job, ASYNC_STATUS_OK)) == 0)
+            pthread_yield();
+    } while (QAT_CHK_JOB_RESUMED_UNEXPECTEDLY(job_ret));
+
     DEBUG("- Finished: %p - status = %d\n", rsa_pub_req, sts);
 
     if (sts < 1) {
